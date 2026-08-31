@@ -26,18 +26,20 @@ describe('EmployeeTable', () => {
   });
 
   it('calls onEdit with the correct employee when Edit is clicked', async () => {
+    const user = userEvent.setup();
     const onEdit = vi.fn();
     render(<EmployeeTable employees={employees} onEdit={onEdit} onDeleteRequest={vi.fn()} />);
 
-    await userEvent.click(screen.getByRole('button', { name: /edit sangita zare/i }));
+    await user.click(screen.getByRole('button', { name: /edit sangita zare/i }));
     expect(onEdit).toHaveBeenCalledWith(employees[0]);
   });
 
   it('calls onDeleteRequest with the correct employee when Delete is clicked', async () => {
+    const user = userEvent.setup();
     const onDeleteRequest = vi.fn();
     render(<EmployeeTable employees={employees} onEdit={vi.fn()} onDeleteRequest={onDeleteRequest} />);
 
-    await userEvent.click(screen.getByRole('button', { name: /delete sangita zare/i }));
+    await user.click(screen.getByRole('button', { name: /delete sangita zare/i }));
     expect(onDeleteRequest).toHaveBeenCalledWith(employees[0]);
   });
 

@@ -26,3 +26,12 @@ if (!window.ResizeObserver) {
   // @ts-expect-error - test-only polyfill
   window.ResizeObserver = MockResizeObserver;
 }
+
+// jsdom does not support pseudo-elements; Ant Design Table/Form rely on getComputedStyle
+const originalGetComputedStyle = window.getComputedStyle;
+window.getComputedStyle = (element, pseudoElement) => {
+  if (pseudoElement) {
+    return { getPropertyValue: () => '' } as CSSStyleDeclaration;
+  }
+  return originalGetComputedStyle(element);
+};

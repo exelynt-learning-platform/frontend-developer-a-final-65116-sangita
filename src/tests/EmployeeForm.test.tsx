@@ -11,12 +11,13 @@ const countries: Country[] = [
 
 describe('EmployeeForm', () => {
   it('shows required-field errors when submitted empty', async () => {
+    const user = userEvent.setup();
     const onSubmit = vi.fn();
     render(
       <EmployeeForm countries={countries} submitting={false} onSubmit={onSubmit} onCancel={vi.fn()} />
     );
 
-    await userEvent.click(screen.getByRole('button', { name: /add employee/i }));
+    await user.click(screen.getByRole('button', { name: /add employee/i }));
 
     await waitFor(() => {
       expect(screen.getByText('Name is required.')).toBeInTheDocument();
@@ -26,10 +27,11 @@ describe('EmployeeForm', () => {
   });
 
   it('shows an error for an invalid email format', async () => {
+    const user = userEvent.setup();
     render(<EmployeeForm countries={countries} submitting={false} onSubmit={vi.fn()} onCancel={vi.fn()} />);
 
-    await userEvent.type(screen.getByPlaceholderText(/name@example.com/i), 'not-an-email');
-    await userEvent.click(screen.getByRole('button', { name: /add employee/i }));
+    await user.type(screen.getByPlaceholderText(/name@example.com/i), 'not-an-email');
+    await user.click(screen.getByRole('button', { name: /add employee/i }));
 
     await waitFor(() => {
       expect(screen.getByText('Please enter a valid email address.')).toBeInTheDocument();
@@ -63,20 +65,21 @@ describe('EmployeeForm', () => {
   });
 
   it('calls onSubmit with form values when all fields are valid', async () => {
+    const user = userEvent.setup();
     const onSubmit = vi.fn();
     render(<EmployeeForm countries={countries} submitting={false} onSubmit={onSubmit} onCancel={vi.fn()} />);
 
-    await userEvent.type(screen.getByPlaceholderText(/Sangita Zare/i), 'John Doe');
-    await userEvent.type(screen.getByPlaceholderText(/name@example.com/i), 'john@example.com');
-    await userEvent.type(screen.getByPlaceholderText(/\+919812345678/i), '9876543210');
+    await user.type(screen.getByPlaceholderText(/Sangita Zare/i), 'John Doe');
+    await user.type(screen.getByPlaceholderText(/name@example.com/i), 'john@example.com');
+    await user.type(screen.getByPlaceholderText(/\+919812345678/i), '9876543210');
 
-    await userEvent.click(screen.getByRole('combobox', { name: /country/i }));
-    await userEvent.click(await screen.findByTitle('India'));
+    await user.click(screen.getByRole('combobox', { name: /country/i }));
+    await user.click(await screen.findByTitle('India'));
 
-    await userEvent.type(screen.getByPlaceholderText(/Maharashtra/i), 'Maharashtra');
-    await userEvent.type(screen.getByPlaceholderText(/Pune/i), 'Pune');
+    await user.type(screen.getByPlaceholderText(/Maharashtra/i), 'Maharashtra');
+    await user.type(screen.getByPlaceholderText(/Pune/i), 'Pune');
 
-    await userEvent.click(screen.getByRole('button', { name: /add employee/i }));
+    await user.click(screen.getByRole('button', { name: /add employee/i }));
 
     await waitFor(() => {
       expect(onSubmit).toHaveBeenCalledWith(
@@ -93,10 +96,11 @@ describe('EmployeeForm', () => {
   });
 
   it('calls onCancel when Cancel is clicked', async () => {
+    const user = userEvent.setup();
     const onCancel = vi.fn();
     render(<EmployeeForm countries={countries} submitting={false} onSubmit={vi.fn()} onCancel={onCancel} />);
 
-    await userEvent.click(screen.getByRole('button', { name: /cancel/i }));
+    await user.click(screen.getByRole('button', { name: /cancel/i }));
     expect(onCancel).toHaveBeenCalled();
   });
 });

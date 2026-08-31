@@ -9,9 +9,13 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: './src/tests/setup.ts',
+    testTimeout: 20000,
+    fileParallelism: false,
     coverage: {
-      reporter: ['text', 'html'],
-      exclude: ['node_modules/', 'src/tests/'],
+      provider: 'v8',
+      reporter: ['text', 'html', 'lcov', 'json-summary'],
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: ['node_modules/', 'src/tests/', 'src/main.tsx'],
     },
   },
 })
