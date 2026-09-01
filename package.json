@@ -8,9 +8,9 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "vitest run",
+    "test": "vitest run --coverage",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:ci": "vitest run --coverage"
   },
   "dependencies": {
     "@ant-design/icons": "^6.3.4",
