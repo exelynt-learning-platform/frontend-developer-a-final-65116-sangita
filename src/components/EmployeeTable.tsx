@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { Table, Button, Space, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import type { Employee } from '../types';
@@ -8,8 +9,11 @@ interface EmployeeTableProps {
   onDeleteRequest: (employee: Employee) => void;
 }
 
-export default function EmployeeTable({ employees, onEdit, onDeleteRequest }: EmployeeTableProps) {
-  const columns: ColumnsType<Employee> = [
+function createEmployeeColumns(
+  onEdit: (employee: Employee) => void,
+  onDeleteRequest: (employee: Employee) => void
+): ColumnsType<Employee> {
+  return [
     {
       title: 'ID',
       dataIndex: 'id',
@@ -59,6 +63,13 @@ export default function EmployeeTable({ employees, onEdit, onDeleteRequest }: Em
       ),
     },
   ];
+}
+
+export default function EmployeeTable({ employees, onEdit, onDeleteRequest }: EmployeeTableProps) {
+  const columns = useMemo(
+    () => createEmployeeColumns(onEdit, onDeleteRequest),
+    [onEdit, onDeleteRequest]
+  );
 
   return (
     <Table

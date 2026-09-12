@@ -1,36 +1,27 @@
-import { useEffect, useState } from 'react';
-import { Button, Modal, Typography, Space, message } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { useCallback, useEffect, useState } from 'react';
+import { Modal } from 'antd';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { fetchCountries } from '../countries/countriesSlice';
-import {
-  fetchEmployees,
-  searchEmployeeById,
-  createEmployee,
-  updateEmployee,
-  deleteEmployee,
-  clearSearch,
-  clearMutationError,
-} from './employeesSlice';
+import { fetchEmployees, searchEmployeeById, clearSearch } from './employeesSlice';
+import { useEmployeeMutations } from './useEmployeeMutations';
+import { computeDisplayedEmployees } from './displayedEmployees';
+import { resolveListState } from './listViewState';
 import EmployeeForm from '../../components/EmployeeForm';
-import SearchById from '../../components/SearchById';
 import ConfirmDeleteModal from '../../components/ConfirmDeleteModal';
 import EmployeeListContent from '../../components/EmployeeListContent';
-import { computeDisplayedEmployees } from './displayedEmployees';
+import EmployeeListHeader from '../../components/EmployeeListHeader';
 import type { Employee, EmployeeFormValues } from '../../types';
 import styles from './EmployeeListPage.module.css';
 
-const { Title } = Typography;
-
 export default function EmployeeListPage() {
   const dispatch = useAppDispatch();
+  const { addEmployee, saveEmployee, removeEmployee } = useEmployeeMutations();
 
   const {
     list,
     loading,
     error,
     mutationLoading,
-    mutationError,
     searchResult,
     searchStatus,
     searchError,
@@ -51,90 +42,63 @@ export default function EmployeeListPage() {
     dispatch(fetchCountries());
   }, [dispatch]);
 
-  useEffect(() => {
-    if (mutationError) {
-      message.error(mutationError);
-      dispatch(clearMutationError());
-    }
-  }, [mutationError, dispatch]);
-
   const handleAddClick = () => {
     setEditingEmployee(null);
     setFormOpen(true);
   };
 
-  const handleEditClick = (employee: Employee) => {
+  const handleEditClick = useCallback((employee: Employee) => {
     setEditingEmployee(employee);
     setFormOpen(true);
-  };
+  }, []);
+
+  const handleDeleteRequest = useCallback((employee: Employee) => {
+    setDeleteTarget(employee);
+  }, []);
 
   const handleFormSubmit = async (values: EmployeeFormValues) => {
-    if (editingEmployee) {
-      const result = await dispatch(updateEmployee({ id: editingEmployee.id, payload: values }));
-      if (updateEmployee.fulfilled.match(result)) {
-        message.success('Employee updated successfully.');
-        setFormOpen(false);
-      }
-    } else {
-      const result = await dispatch(createEmployee(values));
-      if (createEmployee.fulfilled.match(result)) {
-        message.success('Employee added successfully.');
-        setFormOpen(false);
-      }
+    const succeeded = editingEmployee
+      ? await saveEmployee(editingEmployee.id, values)
+      : await addEmployee(values);
+    if (succeeded) {
+      setFormOpen(false);
     }
   };
 
-  const handleDeleteRequest = (employee: Employee) => setDeleteTarget(employee);
-
   const handleDeleteConfirm = async () => {
-    if (!deleteTarget) return;
-    const result = await dispatch(deleteEmployee(deleteTarget.id));
-    if (deleteEmployee.fulfilled.match(result)) {
-      message.success('Employee deleted successfully.');
+    if (!deleteTarget) {
+      console.warn('Delete confirmed with no employee selected.');
+      return;
     }
+    await removeEmployee(deleteTarget.id);
     setDeleteTarget(null);
   };
 
-  const handleSearch = (id: string) => {
-    dispatch(searchEmployeeById(id));
-  };
-
-  const handleClearSearch = () => {
-    dispatch(clearSearch());
-  };
-
   const displayedEmployees = computeDisplayedEmployees(searchStatus, searchResult, list);
+  const listView = resolveListState({
+    loading,
+    countriesLoading,
+    error,
+    countriesError,
+    searchStatus,
+    searchError,
+    displayedEmployees,
+    onRetryEmployees: () => dispatch(fetchEmployees()),
+    onRetryCountries: () => dispatch(fetchCountries()),
+    onRetrySearch: () => dispatch(searchEmployeeById(searchQuery)),
+  });
 
   return (
     <div className={styles.page}>
-      <Space className={styles.header}>
-        <Title level={3}>
-          Employee Management
-        </Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleAddClick}>
-          Add Employee
-        </Button>
-      </Space>
-
-      <div className={styles.search}>
-        <SearchById
-          onSearch={handleSearch}
-          onClear={handleClearSearch}
-          loading={searchStatus === 'loading'}
-        />
-      </div>
+      <EmployeeListHeader
+        searchLoading={searchStatus === 'loading'}
+        onAdd={handleAddClick}
+        onSearch={(id) => dispatch(searchEmployeeById(id))}
+        onClearSearch={() => dispatch(clearSearch())}
+      />
 
       <EmployeeListContent
-        loading={loading}
-        countriesLoading={countriesLoading}
-        error={error}
-        countriesError={countriesError}
-        searchStatus={searchStatus}
-        searchError={searchError}
-        displayedEmployees={displayedEmployees}
-        onRetryEmployees={() => dispatch(fetchEmployees())}
-        onRetryCountries={() => dispatch(fetchCountries())}
-        onRetrySearch={() => dispatch(searchEmployeeById(searchQuery))}
+        view={listView}
         onEdit={handleEditClick}
         onDeleteRequest={handleDeleteRequest}
       />

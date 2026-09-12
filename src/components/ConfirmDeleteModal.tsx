@@ -23,7 +23,7 @@ export default function ConfirmDeleteModal({
       onCancel={onCancel}
       confirmLoading={confirmLoading}
       okText="Delete"
-      okButtonProps={{ danger: true }}
+      okButtonProps={{ danger: true, disabled: !employeeName.trim() }}
       cancelText="Cancel"
     >
       <p>

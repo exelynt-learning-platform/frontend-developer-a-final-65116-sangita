@@ -10,7 +10,6 @@ export default function ErrorMessage({ message, onRetry }: ErrorMessageProps) {
     <Alert
       type="error"
       showIcon
-      title="Something went wrong"
       message="Something went wrong"
       description={message}
       style={{ margin: '16px 0' }}
