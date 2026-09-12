@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { configureStore } from '@reduxjs/toolkit';
 import countriesReducer, { fetchCountries } from '../features/countries/countriesSlice';
 import { countriesAPI } from '../features/countries/countriesAPI';
+import { USER_MESSAGES } from '../constants/messages';
 import type { Country } from '../types';
 
 vi.mock('../features/countries/countriesAPI');
@@ -76,6 +77,6 @@ describe('countriesSlice', () => {
   it('uses a fallback error message when the rejected payload is missing', () => {
     const state = countriesReducer(undefined, { type: fetchCountries.rejected.type });
     expect(state.loading).toBe(false);
-    expect(state.error).toBe('Failed to load countries.');
+    expect(state.error).toBe(USER_MESSAGES.failedToLoadCountries);
   });
 });

@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { countriesAPI } from './countriesAPI';
 import { toRejectedPayload } from '../../api/client';
+import { USER_MESSAGES } from '../../constants/messages';
 import type { Country, RejectedPayload } from '../../types';
 
 interface CountriesState {
@@ -45,7 +46,7 @@ const countriesSlice = createSlice({
       })
       .addCase(fetchCountries.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload?.message ?? 'Failed to load countries.';
+        state.error = action.payload?.message ?? USER_MESSAGES.failedToLoadCountries;
       });
   },
 });

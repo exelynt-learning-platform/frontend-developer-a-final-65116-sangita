@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { ensureDeleteTarget } from '../features/employees/deleteGuard';
+import { ensureDeleteTarget, isMissingFromList } from '../features/employees/deleteGuard';
 import type { Employee } from '../types';
 
 const employee: Employee = {
@@ -22,5 +22,19 @@ describe('ensureDeleteTarget', () => {
     expect(ensureDeleteTarget(null)).toBe(false);
     expect(warn).toHaveBeenCalledWith('Delete confirmed with no employee selected.');
     warn.mockRestore();
+  });
+});
+
+describe('isMissingFromList', () => {
+  it('returns false when there is no target', () => {
+    expect(isMissingFromList(null, [employee])).toBe(false);
+  });
+
+  it('returns false when the target is still in the list', () => {
+    expect(isMissingFromList(employee, [employee])).toBe(false);
+  });
+
+  it('returns true when the target is no longer in the list', () => {
+    expect(isMissingFromList(employee, [])).toBe(true);
   });
 });

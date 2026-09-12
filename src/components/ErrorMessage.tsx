@@ -1,4 +1,5 @@
 import { Alert, Button } from 'antd';
+import { USER_MESSAGES } from '../constants/messages';
 
 interface ErrorMessageProps {
   message: string;
@@ -10,7 +11,7 @@ export default function ErrorMessage({ message, onRetry }: ErrorMessageProps) {
     <Alert
       type="error"
       showIcon
-      title="Something went wrong"
+      message={USER_MESSAGES.alertHeading}
       description={message}
       style={{ margin: '16px 0' }}
       action={

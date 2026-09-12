@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { employeesAPI } from './employeesAPI';
 import { isNotFoundError, toRejectedPayload } from '../../api/client';
+import { USER_MESSAGES } from '../../constants/messages';
 import type { Employee, EmployeeFormValues, RejectedPayload, SearchStatus } from '../../types';
 
 interface EmployeesState {
@@ -55,7 +56,7 @@ export const searchEmployeeById = createAsyncThunk<Employee, string, ThunkApi>(
           notFound: true,
         });
       }
-      return rejectWithValue(toRejectedPayload(err, { notFound: false }));
+      return rejectWithValue(toRejectedPayload(err));
     }
   }
 );
@@ -120,7 +121,7 @@ const employeesSlice = createSlice({
       })
       .addCase(fetchEmployees.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload?.message ?? 'Failed to load employees.';
+        state.error = action.payload?.message ?? USER_MESSAGES.failedToLoadEmployees;
       })
 
       .addCase(searchEmployeeById.pending, (state, action) => {
@@ -136,7 +137,7 @@ const employeesSlice = createSlice({
       .addCase(searchEmployeeById.rejected, (state, action) => {
         state.searchStatus = action.payload?.notFound ? 'not_found' : 'error';
         state.searchResult = null;
-        state.searchError = action.payload?.message ?? 'Employee not found.';
+        state.searchError = action.payload?.message ?? USER_MESSAGES.employeeNotFound;
       })
 
       .addCase(createEmployee.pending, (state) => {
@@ -149,7 +150,7 @@ const employeesSlice = createSlice({
       })
       .addCase(createEmployee.rejected, (state, action) => {
         state.mutationLoading = false;
-        state.mutationError = action.payload?.message ?? 'Failed to create employee.';
+        state.mutationError = action.payload?.message ?? USER_MESSAGES.failedToCreate;
       })
 
       .addCase(updateEmployee.pending, (state) => {
@@ -163,7 +164,7 @@ const employeesSlice = createSlice({
       })
       .addCase(updateEmployee.rejected, (state, action) => {
         state.mutationLoading = false;
-        state.mutationError = action.payload?.message ?? 'Failed to update employee.';
+        state.mutationError = action.payload?.message ?? USER_MESSAGES.failedToUpdate;
       })
 
       .addCase(deleteEmployee.pending, (state) => {
@@ -176,7 +177,7 @@ const employeesSlice = createSlice({
       })
       .addCase(deleteEmployee.rejected, (state, action) => {
         state.mutationLoading = false;
-        state.mutationError = action.payload?.message ?? 'Failed to delete employee.';
+        state.mutationError = action.payload?.message ?? USER_MESSAGES.failedToDelete;
       });
   },
 });

@@ -1,5 +1,6 @@
 import { message } from 'antd';
 import { useAppDispatch } from '../../app/hooks';
+import { USER_MESSAGES } from '../../constants/messages';
 import { createEmployee, deleteEmployee, updateEmployee } from './employeesSlice';
 import type { EmployeeFormValues, RejectedPayload } from '../../types';
 
@@ -19,10 +20,10 @@ export function useEmployeeMutations() {
   const addEmployee = async (values: EmployeeFormValues): Promise<boolean> => {
     try {
       await dispatch(createEmployee(values)).unwrap();
-      message.success('Employee added successfully.');
+      message.success(USER_MESSAGES.employeeAdded);
       return true;
     } catch (err) {
-      message.error(getMutationErrorMessage(err, 'Failed to create employee.'));
+      message.error(getMutationErrorMessage(err, USER_MESSAGES.failedToCreate));
       return false;
     }
   };
@@ -30,10 +31,10 @@ export function useEmployeeMutations() {
   const saveEmployee = async (id: string, values: EmployeeFormValues): Promise<boolean> => {
     try {
       await dispatch(updateEmployee({ id, payload: values })).unwrap();
-      message.success('Employee updated successfully.');
+      message.success(USER_MESSAGES.employeeUpdated);
       return true;
     } catch (err) {
-      message.error(getMutationErrorMessage(err, 'Failed to update employee.'));
+      message.error(getMutationErrorMessage(err, USER_MESSAGES.failedToUpdate));
       return false;
     }
   };
@@ -41,10 +42,10 @@ export function useEmployeeMutations() {
   const removeEmployee = async (id: string): Promise<boolean> => {
     try {
       await dispatch(deleteEmployee(id)).unwrap();
-      message.success('Employee deleted successfully.');
+      message.success(USER_MESSAGES.employeeDeleted);
       return true;
     } catch (err) {
-      message.error(getMutationErrorMessage(err, 'Failed to delete employee.'));
+      message.error(getMutationErrorMessage(err, USER_MESSAGES.failedToDelete));
       return false;
     }
   };

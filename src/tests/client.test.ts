@@ -67,10 +67,17 @@ describe('getHttpStatus and isNotFoundError', () => {
 });
 
 describe('toRejectedPayload', () => {
-  it('wraps the error message and optional extras', () => {
-    expect(toRejectedPayload(new Error('boom'), { notFound: false })).toEqual({
+  it('always includes notFound, defaulting to false', () => {
+    expect(toRejectedPayload(new Error('boom'))).toEqual({
       message: 'boom',
       notFound: false,
+    });
+  });
+
+  it('preserves an explicit notFound flag', () => {
+    expect(toRejectedPayload(new Error('boom'), { notFound: true })).toEqual({
+      message: 'boom',
+      notFound: true,
     });
   });
 });

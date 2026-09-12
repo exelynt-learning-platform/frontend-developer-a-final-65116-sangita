@@ -11,6 +11,7 @@ import employeesReducer, {
   clearMutationError,
 } from '../features/employees/employeesSlice';
 import { employeesAPI } from '../features/employees/employeesAPI';
+import { USER_MESSAGES } from '../constants/messages';
 import type { Employee } from '../types';
 
 function axios404() {
@@ -231,19 +232,19 @@ describe('employeesSlice', () => {
 
   it('uses fallback messages when mutation/search rejected payloads are missing', () => {
     const created = employeesReducer(undefined, { type: createEmployee.rejected.type });
-    expect(created.mutationError).toBe('Failed to create employee.');
+    expect(created.mutationError).toBe(USER_MESSAGES.failedToCreate);
 
     const updated = employeesReducer(undefined, { type: updateEmployee.rejected.type });
-    expect(updated.mutationError).toBe('Failed to update employee.');
+    expect(updated.mutationError).toBe(USER_MESSAGES.failedToUpdate);
 
     const removed = employeesReducer(undefined, { type: deleteEmployee.rejected.type });
-    expect(removed.mutationError).toBe('Failed to delete employee.');
+    expect(removed.mutationError).toBe(USER_MESSAGES.failedToDelete);
 
     const fetched = employeesReducer(undefined, { type: fetchEmployees.rejected.type });
-    expect(fetched.error).toBe('Failed to load employees.');
+    expect(fetched.error).toBe(USER_MESSAGES.failedToLoadEmployees);
 
     const searched = employeesReducer(undefined, { type: searchEmployeeById.rejected.type });
     expect(searched.searchStatus).toBe('error');
-    expect(searched.searchError).toBe('Employee not found.');
+    expect(searched.searchError).toBe(USER_MESSAGES.employeeNotFound);
   });
 });

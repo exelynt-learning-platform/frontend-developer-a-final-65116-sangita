@@ -38,7 +38,7 @@ export function isNotFoundError(error: unknown): boolean {
 
 export function toRejectedPayload(
   error: unknown,
-  extras: Pick<RejectedPayload, 'notFound'> = {}
+  extras: { notFound?: boolean } = {}
 ): RejectedPayload {
-  return { message: getErrorMessage(error), ...extras };
+  return { message: getErrorMessage(error), notFound: extras.notFound ?? false };
 }

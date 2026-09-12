@@ -6,7 +6,7 @@ import { fetchEmployees, searchEmployeeById, clearSearch } from './employeesSlic
 import { useEmployeeMutations } from './useEmployeeMutations';
 import { computeDisplayedEmployees } from './displayedEmployees';
 import { resolveListState } from './listViewState';
-import { ensureDeleteTarget } from './deleteGuard';
+import { ensureDeleteTarget, isMissingFromList } from './deleteGuard';
 import EmployeeForm from '../../components/EmployeeForm';
 import ConfirmDeleteModal from '../../components/ConfirmDeleteModal';
 import EmployeeListContent from '../../components/EmployeeListContent';
@@ -42,6 +42,19 @@ export default function EmployeeListPage() {
     dispatch(fetchEmployees());
     dispatch(fetchCountries());
   }, [dispatch]);
+
+  useEffect(() => {
+    if (isMissingFromList(editingEmployee, list)) {
+      setEditingEmployee(null);
+      setFormOpen(false);
+    }
+  }, [list, editingEmployee]);
+
+  useEffect(() => {
+    if (isMissingFromList(deleteTarget, list)) {
+      setDeleteTarget(null);
+    }
+  }, [list, deleteTarget]);
 
   const handleAddClick = () => {
     setEditingEmployee(null);

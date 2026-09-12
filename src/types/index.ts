@@ -25,5 +25,5 @@ export type SearchStatus = 'idle' | 'loading' | 'found' | 'not_found' | 'error';
 
 export interface RejectedPayload {
   message: string;
-  notFound?: boolean;
+  notFound: boolean;
 }
