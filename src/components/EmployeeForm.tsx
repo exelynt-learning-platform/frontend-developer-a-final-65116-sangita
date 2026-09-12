@@ -3,6 +3,14 @@ import { Form, Input, Select, Button, Space } from 'antd';
 import type { Employee, EmployeeFormValues, Country } from '../types';
 import { FIELD_LIMITS, isValidEmail, isValidMobile, VALIDATION_MESSAGES } from '../utils/validation';
 
+const PLACEHOLDERS = {
+  name: `e.g. Sangita Zare`,
+  email: `e.g. name@example.com`,
+  mobile: `e.g. +919812345678`,
+  state: `e.g. Maharashtra`,
+  district: `e.g. Pune`,
+} as const;
+
 interface EmployeeFormProps {
   initialValues?: Employee | null;
   countries: Country[];
@@ -62,7 +70,7 @@ export default function EmployeeForm({
           },
         ]}
       >
-        <Input placeholder="e.g. Sangita Zare" maxLength={FIELD_LIMITS.name.max} />
+        <Input placeholder={PLACEHOLDERS.name} maxLength={FIELD_LIMITS.name.max} />
       </Form.Item>
 
       <Form.Item
@@ -78,7 +86,7 @@ export default function EmployeeForm({
           },
         ]}
       >
-        <Input placeholder="e.g. name@example.com" type="email" />
+        <Input placeholder={PLACEHOLDERS.email} type="email" />
       </Form.Item>
 
       <Form.Item
@@ -94,7 +102,7 @@ export default function EmployeeForm({
           },
         ]}
       >
-        <Input placeholder="e.g. +919812345678" maxLength={FIELD_LIMITS.mobile.max} />
+        <Input placeholder={PLACEHOLDERS.mobile} maxLength={FIELD_LIMITS.mobile.max} />
       </Form.Item>
 
       <Form.Item
@@ -125,7 +133,7 @@ export default function EmployeeForm({
           },
         ]}
       >
-        <Input placeholder="e.g. Maharashtra" maxLength={FIELD_LIMITS.state.max} />
+        <Input placeholder={PLACEHOLDERS.state} maxLength={FIELD_LIMITS.state.max} />
       </Form.Item>
 
       <Form.Item
@@ -143,7 +151,7 @@ export default function EmployeeForm({
           },
         ]}
       >
-        <Input placeholder="e.g. Pune" maxLength={FIELD_LIMITS.district.max} />
+        <Input placeholder={PLACEHOLDERS.district} maxLength={FIELD_LIMITS.district.max} />
       </Form.Item>
 
       <Form.Item>

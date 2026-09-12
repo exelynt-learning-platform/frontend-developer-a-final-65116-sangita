@@ -26,8 +26,16 @@ const { Title } = Typography;
 export default function EmployeeListPage() {
   const dispatch = useAppDispatch();
 
-  const { list, loading, error, mutationLoading, mutationError, searchResult, searchStatus, searchError } =
-    useAppSelector((s) => s.employees);
+  const {
+    list,
+    loading,
+    error,
+    mutationLoading,
+    mutationError,
+    searchResult,
+    searchStatus,
+    searchError,
+  } = useAppSelector((s) => s.employees);
   const { list: countries, loading: countriesLoading, error: countriesError } = useAppSelector(
     (s) => s.countries
   );
