@@ -12,14 +12,13 @@ import {
   clearSearch,
   clearMutationError,
 } from './employeesSlice';
-import EmployeeTable from '../../components/EmployeeTable';
 import EmployeeForm from '../../components/EmployeeForm';
 import SearchById from '../../components/SearchById';
 import ConfirmDeleteModal from '../../components/ConfirmDeleteModal';
-import LoadingSpinner from '../../components/LoadingSpinner';
-import ErrorMessage from '../../components/ErrorMessage';
-import EmptyState from '../../components/EmptyState';
+import EmployeeListContent from '../../components/EmployeeListContent';
+import { computeDisplayedEmployees } from './displayedEmployees';
 import type { Employee, EmployeeFormValues } from '../../types';
+import styles from './EmployeeListPage.module.css';
 
 const { Title } = Typography;
 
@@ -35,16 +34,17 @@ export default function EmployeeListPage() {
     searchResult,
     searchStatus,
     searchError,
+    searchQuery,
   } = useAppSelector((s) => s.employees);
-  const { list: countries, loading: countriesLoading, error: countriesError } = useAppSelector(
-    (s) => s.countries
-  );
+  const {
+    list: countries,
+    loading: countriesLoading,
+    error: countriesError,
+  } = useAppSelector((s) => s.countries);
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Employee | null>(null);
-  const [isSearching, setIsSearching] = useState(false);
-  const [lastSearchedId, setLastSearchedId] = useState('');
 
   useEffect(() => {
     dispatch(fetchEmployees());
@@ -96,65 +96,19 @@ export default function EmployeeListPage() {
   };
 
   const handleSearch = (id: string) => {
-    setIsSearching(true);
-    setLastSearchedId(id);
     dispatch(searchEmployeeById(id));
   };
 
   const handleClearSearch = () => {
-    setIsSearching(false);
-    setLastSearchedId('');
     dispatch(clearSearch());
   };
 
-  const displayedEmployees = isSearching
-    ? searchStatus === 'found' && searchResult
-      ? [searchResult]
-      : []
-    : list;
-
-  const renderContent = () => {
-    if (loading || countriesLoading) return <LoadingSpinner tip="Loading employees..." />;
-    if (error) return <ErrorMessage message={error} onRetry={() => dispatch(fetchEmployees())} />;
-    if (countriesError)
-      return <ErrorMessage message={countriesError} onRetry={() => dispatch(fetchCountries())} />;
-
-    if (isSearching) {
-      if (searchStatus === 'loading') return <LoadingSpinner tip="Searching..." />;
-      if (searchStatus === 'not_found') {
-        return <EmptyState description={searchError ?? 'No employee found with that ID.'} />;
-      }
-      if (searchStatus === 'error') {
-        return (
-          <ErrorMessage
-            message={searchError ?? 'Something went wrong while searching.'}
-            onRetry={() => dispatch(searchEmployeeById(lastSearchedId))}
-          />
-        );
-      }
-    }
-
-    if (displayedEmployees.length === 0) {
-      return (
-        <EmptyState
-          description={isSearching ? 'No employee found with that ID.' : 'No employees yet. Add one to get started.'}
-        />
-      );
-    }
-
-    return (
-      <EmployeeTable
-        employees={displayedEmployees}
-        onEdit={handleEditClick}
-        onDeleteRequest={handleDeleteRequest}
-      />
-    );
-  };
+  const displayedEmployees = computeDisplayedEmployees(searchStatus, searchResult, list);
 
   return (
-    <div style={{ maxWidth: 1000, margin: '0 auto', padding: 24 }}>
-      <Space style={{ width: '100%', justifyContent: 'space-between', marginBottom: 16 }}>
-        <Title level={3} style={{ margin: 0 }}>
+    <div className={styles.page}>
+      <Space className={styles.header}>
+        <Title level={3}>
           Employee Management
         </Title>
         <Button type="primary" icon={<PlusOutlined />} onClick={handleAddClick}>
@@ -162,7 +116,7 @@ export default function EmployeeListPage() {
         </Button>
       </Space>
 
-      <div style={{ marginBottom: 16 }}>
+      <div className={styles.search}>
         <SearchById
           onSearch={handleSearch}
           onClear={handleClearSearch}
@@ -170,7 +124,20 @@ export default function EmployeeListPage() {
         />
       </div>
 
-      {renderContent()}
+      <EmployeeListContent
+        loading={loading}
+        countriesLoading={countriesLoading}
+        error={error}
+        countriesError={countriesError}
+        searchStatus={searchStatus}
+        searchError={searchError}
+        displayedEmployees={displayedEmployees}
+        onRetryEmployees={() => dispatch(fetchEmployees())}
+        onRetryCountries={() => dispatch(fetchCountries())}
+        onRetrySearch={() => dispatch(searchEmployeeById(searchQuery))}
+        onEdit={handleEditClick}
+        onDeleteRequest={handleDeleteRequest}
+      />
 
       <Modal
         title={editingEmployee ? 'Edit Employee' : 'Add Employee'}

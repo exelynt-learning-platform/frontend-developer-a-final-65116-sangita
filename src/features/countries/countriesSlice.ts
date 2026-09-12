@@ -1,8 +1,8 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { countriesAPI } from './countriesAPI';
-import { getErrorMessage } from '../../api/client';
-import type { Country } from '../../types';
+import { toRejectedPayload } from '../../api/client';
+import type { Country, RejectedPayload } from '../../types';
 
 interface CountriesState {
   list: Country[];
@@ -16,13 +16,15 @@ const initialState: CountriesState = {
   error: null,
 };
 
-export const fetchCountries = createAsyncThunk(
+type ThunkApi = { rejectValue: RejectedPayload };
+
+export const fetchCountries = createAsyncThunk<Country[], void, ThunkApi>(
   'countries/fetchAll',
   async (_: void, { rejectWithValue }) => {
     try {
       return await countriesAPI.getAll();
     } catch (err) {
-      return rejectWithValue(getErrorMessage(err));
+      return rejectWithValue(toRejectedPayload(err));
     }
   }
 );
@@ -43,7 +45,7 @@ const countriesSlice = createSlice({
       })
       .addCase(fetchCountries.rejected, (state, action) => {
         state.loading = false;
-        state.error = (action.payload as string) ?? 'Failed to load countries.';
+        state.error = action.payload?.message ?? 'Failed to load countries.';
       });
   },
 });

@@ -1,15 +1,32 @@
 import { useEffect } from 'react';
 import { Form, Input, Select, Button, Space } from 'antd';
 import type { Employee, EmployeeFormValues, Country } from '../types';
-import { FIELD_LIMITS, isValidEmail, isValidMobile, VALIDATION_MESSAGES } from '../utils/validation';
+import {
+  FIELD_LIMITS,
+  isValidEmail,
+  isValidLength,
+  isValidMobile,
+  VALIDATION_MESSAGES,
+} from '../utils/validation';
 
 const PLACEHOLDERS = {
-  name: `e.g. Sangita Zare`,
-  email: `e.g. name@example.com`,
-  mobile: `e.g. +919812345678`,
-  state: `e.g. Maharashtra`,
-  district: `e.g. Pune`,
+  name: 'e.g. Sangita Zare',
+  email: 'e.g. name@example.com',
+  mobile: 'e.g. +919812345678',
+  state: 'e.g. Maharashtra',
+  district: 'e.g. Pune',
 } as const;
+
+function lengthRule(field: string, limits: { min: number; max: number }) {
+  return {
+    validator(_: unknown, value?: string) {
+      if (!value || isValidLength(value, limits.min, limits.max)) {
+        return Promise.resolve();
+      }
+      return Promise.reject(VALIDATION_MESSAGES.length(field, limits.min, limits.max));
+    },
+  };
+}
 
 interface EmployeeFormProps {
   initialValues?: Employee | null;
@@ -60,14 +77,7 @@ export default function EmployeeForm({
         name="name"
         rules={[
           { required: true, message: VALIDATION_MESSAGES.required('Name') },
-          {
-            validator: (_, value) =>
-              !value || (value.trim().length >= FIELD_LIMITS.name.min && value.trim().length <= FIELD_LIMITS.name.max)
-                ? Promise.resolve()
-                : Promise.reject(
-                    VALIDATION_MESSAGES.length('Name', FIELD_LIMITS.name.min, FIELD_LIMITS.name.max)
-                  ),
-          },
+          lengthRule('Name', FIELD_LIMITS.name),
         ]}
       >
         <Input placeholder={PLACEHOLDERS.name} maxLength={FIELD_LIMITS.name.max} />
@@ -123,14 +133,7 @@ export default function EmployeeForm({
         name="state"
         rules={[
           { required: true, message: VALIDATION_MESSAGES.required('State') },
-          {
-            validator: (_, value) =>
-              !value || (value.trim().length >= FIELD_LIMITS.state.min && value.trim().length <= FIELD_LIMITS.state.max)
-                ? Promise.resolve()
-                : Promise.reject(
-                    VALIDATION_MESSAGES.length('State', FIELD_LIMITS.state.min, FIELD_LIMITS.state.max)
-                  ),
-          },
+          lengthRule('State', FIELD_LIMITS.state),
         ]}
       >
         <Input placeholder={PLACEHOLDERS.state} maxLength={FIELD_LIMITS.state.max} />
@@ -141,14 +144,7 @@ export default function EmployeeForm({
         name="district"
         rules={[
           { required: true, message: VALIDATION_MESSAGES.required('District') },
-          {
-            validator: (_, value) =>
-              !value || (value.trim().length >= FIELD_LIMITS.district.min && value.trim().length <= FIELD_LIMITS.district.max)
-                ? Promise.resolve()
-                : Promise.reject(
-                    VALIDATION_MESSAGES.length('District', FIELD_LIMITS.district.min, FIELD_LIMITS.district.max)
-                  ),
-          },
+          lengthRule('District', FIELD_LIMITS.district),
         ]}
       >
         <Input placeholder={PLACEHOLDERS.district} maxLength={FIELD_LIMITS.district.max} />

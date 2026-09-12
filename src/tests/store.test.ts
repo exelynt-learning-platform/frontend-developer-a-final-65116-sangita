@@ -15,6 +15,7 @@ describe('root store', () => {
       searchResult: null,
       searchStatus: 'idle',
       searchError: null,
+      searchQuery: '',
       mutationLoading: false,
       mutationError: null,
     });

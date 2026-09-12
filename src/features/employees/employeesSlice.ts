@@ -1,8 +1,8 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { employeesAPI } from './employeesAPI';
-import { getErrorMessage, isNotFoundError } from '../../api/client';
-import type { Employee, EmployeeFormValues } from '../../types';
+import { isNotFoundError, toRejectedPayload } from '../../api/client';
+import type { Employee, EmployeeFormValues, RejectedPayload, SearchStatus } from '../../types';
 
 interface EmployeesState {
   list: Employee[];
@@ -10,8 +10,9 @@ interface EmployeesState {
   error: string | null;
   // kept separate so a failed search doesn't clear the main table
   searchResult: Employee | null;
-  searchStatus: 'idle' | 'loading' | 'found' | 'not_found' | 'error';
+  searchStatus: SearchStatus;
   searchError: string | null;
+  searchQuery: string;
   mutationLoading: boolean;
   mutationError: string | null;
 }
@@ -23,22 +24,25 @@ const initialState: EmployeesState = {
   searchResult: null,
   searchStatus: 'idle',
   searchError: null,
+  searchQuery: '',
   mutationLoading: false,
   mutationError: null,
 };
 
-export const fetchEmployees = createAsyncThunk(
+type ThunkApi = { rejectValue: RejectedPayload };
+
+export const fetchEmployees = createAsyncThunk<Employee[], void, ThunkApi>(
   'employees/fetchAll',
   async (_: void, { rejectWithValue }) => {
     try {
       return await employeesAPI.getAll();
     } catch (err) {
-      return rejectWithValue(getErrorMessage(err));
+      return rejectWithValue(toRejectedPayload(err));
     }
   }
 );
 
-export const searchEmployeeById = createAsyncThunk(
+export const searchEmployeeById = createAsyncThunk<Employee, string, ThunkApi>(
   'employees/searchById',
   async (id: string, { rejectWithValue }) => {
     try {
@@ -46,42 +50,46 @@ export const searchEmployeeById = createAsyncThunk(
     } catch (err) {
       // mockapi returns 404 for unknown ids — treat as "not found"
       if (isNotFoundError(err)) {
-        return rejectWithValue({ message: `No employee found with ID "${id}".`, notFound: true });
+        return rejectWithValue({
+          message: `No employee found with ID "${id}".`,
+          notFound: true,
+        });
       }
-      return rejectWithValue({ message: getErrorMessage(err), notFound: false });
+      return rejectWithValue(toRejectedPayload(err, { notFound: false }));
     }
   }
 );
 
-export const createEmployee = createAsyncThunk(
+export const createEmployee = createAsyncThunk<Employee, EmployeeFormValues, ThunkApi>(
   'employees/create',
   async (payload: EmployeeFormValues, { rejectWithValue }) => {
     try {
       return await employeesAPI.create(payload);
     } catch (err) {
-      return rejectWithValue(getErrorMessage(err));
+      return rejectWithValue(toRejectedPayload(err));
     }
   }
 );
 
-export const updateEmployee = createAsyncThunk(
-  'employees/update',
-  async ({ id, payload }: { id: string; payload: EmployeeFormValues }, { rejectWithValue }) => {
-    try {
-      return await employeesAPI.update(id, payload);
-    } catch (err) {
-      return rejectWithValue(getErrorMessage(err));
-    }
+export const updateEmployee = createAsyncThunk<
+  Employee,
+  { id: string; payload: EmployeeFormValues },
+  ThunkApi
+>('employees/update', async ({ id, payload }, { rejectWithValue }) => {
+  try {
+    return await employeesAPI.update(id, payload);
+  } catch (err) {
+    return rejectWithValue(toRejectedPayload(err));
   }
-);
+});
 
-export const deleteEmployee = createAsyncThunk(
+export const deleteEmployee = createAsyncThunk<string, string, ThunkApi>(
   'employees/delete',
   async (id: string, { rejectWithValue }) => {
     try {
       return await employeesAPI.remove(id);
     } catch (err) {
-      return rejectWithValue(getErrorMessage(err));
+      return rejectWithValue(toRejectedPayload(err));
     }
   }
 );
@@ -94,6 +102,7 @@ const employeesSlice = createSlice({
       state.searchResult = null;
       state.searchStatus = 'idle';
       state.searchError = null;
+      state.searchQuery = '';
     },
     clearMutationError(state) {
       state.mutationError = null;
@@ -111,23 +120,23 @@ const employeesSlice = createSlice({
       })
       .addCase(fetchEmployees.rejected, (state, action) => {
         state.loading = false;
-        state.error = (action.payload as string) ?? 'Failed to load employees.';
+        state.error = action.payload?.message ?? 'Failed to load employees.';
       })
 
-      .addCase(searchEmployeeById.pending, (state) => {
+      .addCase(searchEmployeeById.pending, (state, action) => {
         state.searchStatus = 'loading';
         state.searchError = null;
         state.searchResult = null;
+        state.searchQuery = action.meta.arg;
       })
       .addCase(searchEmployeeById.fulfilled, (state, action: PayloadAction<Employee>) => {
         state.searchStatus = 'found';
         state.searchResult = action.payload;
       })
       .addCase(searchEmployeeById.rejected, (state, action) => {
-        const payload = action.payload as { message: string; notFound: boolean } | undefined;
-        state.searchStatus = payload?.notFound ? 'not_found' : 'error';
+        state.searchStatus = action.payload?.notFound ? 'not_found' : 'error';
         state.searchResult = null;
-        state.searchError = payload?.message ?? 'Employee not found.';
+        state.searchError = action.payload?.message ?? 'Employee not found.';
       })
 
       .addCase(createEmployee.pending, (state) => {
@@ -140,7 +149,7 @@ const employeesSlice = createSlice({
       })
       .addCase(createEmployee.rejected, (state, action) => {
         state.mutationLoading = false;
-        state.mutationError = (action.payload as string) ?? 'Failed to create employee.';
+        state.mutationError = action.payload?.message ?? 'Failed to create employee.';
       })
 
       .addCase(updateEmployee.pending, (state) => {
@@ -154,7 +163,7 @@ const employeesSlice = createSlice({
       })
       .addCase(updateEmployee.rejected, (state, action) => {
         state.mutationLoading = false;
-        state.mutationError = (action.payload as string) ?? 'Failed to update employee.';
+        state.mutationError = action.payload?.message ?? 'Failed to update employee.';
       })
 
       .addCase(deleteEmployee.pending, (state) => {
@@ -167,7 +176,7 @@ const employeesSlice = createSlice({
       })
       .addCase(deleteEmployee.rejected, (state, action) => {
         state.mutationLoading = false;
-        state.mutationError = (action.payload as string) ?? 'Failed to delete employee.';
+        state.mutationError = action.payload?.message ?? 'Failed to delete employee.';
       });
   },
 });

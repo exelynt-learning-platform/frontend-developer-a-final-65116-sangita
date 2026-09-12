@@ -11,6 +11,7 @@ export default function ErrorMessage({ message, onRetry }: ErrorMessageProps) {
       type="error"
       showIcon
       title="Something went wrong"
+      message="Something went wrong"
       description={message}
       style={{ margin: '16px 0' }}
       action={

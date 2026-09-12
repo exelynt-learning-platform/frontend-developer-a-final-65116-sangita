@@ -9,6 +9,7 @@ import employeesReducer from '../features/employees/employeesSlice';
 import countriesReducer from '../features/countries/countriesSlice';
 import { employeesAPI } from '../features/employees/employeesAPI';
 import { countriesAPI } from '../features/countries/countriesAPI';
+import { computeDisplayedEmployees } from '../features/employees/displayedEmployees';
 import type { Employee, Country } from '../types';
 
 vi.mock('../features/employees/employeesAPI');
@@ -35,6 +36,22 @@ function axios404() {
     { headers: new AxiosHeaders() },
     {},
     { status: 404, statusText: 'Not Found', data: null, headers: {}, config: { headers: new AxiosHeaders() } }
+  );
+}
+
+function axios500() {
+  return new AxiosError(
+    'Request failed with status code 500',
+    'ERR_BAD_RESPONSE',
+    { headers: new AxiosHeaders() },
+    {},
+    {
+      status: 500,
+      statusText: 'Internal Server Error',
+      data: null,
+      headers: {},
+      config: { headers: new AxiosHeaders() },
+    }
   );
 }
 
@@ -124,5 +141,43 @@ describe('EmployeeListPage', () => {
 
     expect(await screen.findByText(/Network down/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
+  });
+
+  it('shows a retryable error when searching fails with a server error', async () => {
+    const user = userEvent.setup();
+    vi.mocked(employeesAPI.getById).mockRejectedValueOnce(axios500());
+    renderPage();
+
+    await screen.findByText('Sangita Zare');
+
+    await user.type(screen.getByLabelText('Search employee by ID'), '1');
+    await user.click(screen.getByRole('button', { name: /search/i }));
+
+    expect(await screen.findByText(/500/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
+
+    vi.mocked(employeesAPI.getById).mockResolvedValueOnce(mockEmployees[0]);
+    await user.click(screen.getByRole('button', { name: 'Retry' }));
+
+    await waitFor(() => expect(employeesAPI.getById).toHaveBeenCalledTimes(2));
+    expect(employeesAPI.getById).toHaveBeenLastCalledWith('1');
+  });
+});
+
+describe('computeDisplayedEmployees', () => {
+  it('returns the full list when search is idle', () => {
+    expect(computeDisplayedEmployees('idle', null, mockEmployees)).toEqual(mockEmployees);
+  });
+
+  it('returns the matching employee when search is found', () => {
+    expect(computeDisplayedEmployees('found', mockEmployees[0], mockEmployees)).toEqual([
+      mockEmployees[0],
+    ]);
+  });
+
+  it('returns an empty list for in-progress or unsuccessful searches', () => {
+    expect(computeDisplayedEmployees('loading', null, mockEmployees)).toEqual([]);
+    expect(computeDisplayedEmployees('not_found', null, mockEmployees)).toEqual([]);
+    expect(computeDisplayedEmployees('error', null, mockEmployees)).toEqual([]);
   });
 });

@@ -147,6 +147,7 @@ describe('employeesSlice', () => {
     const state = store.getState().employees;
     expect(state.searchStatus).toBe('found');
     expect(state.searchResult).toEqual(mockEmployee);
+    expect(state.searchQuery).toBe('1');
   });
 
   it('marks searchStatus as not_found and shows a friendly message on a real 404', async () => {
@@ -158,6 +159,7 @@ describe('employeesSlice', () => {
     const state = store.getState().employees;
     expect(state.searchStatus).toBe('not_found');
     expect(state.searchResult).toBeNull();
+    expect(state.searchQuery).toBe('9999');
     expect(state.searchError).not.toContain('Request failed');
     expect(state.searchError).toBe('No employee found with ID "9999".');
   });
@@ -180,5 +182,6 @@ describe('employeesSlice', () => {
     const state = store.getState().employees;
     expect(state.searchStatus).toBe('idle');
     expect(state.searchResult).toBeNull();
+    expect(state.searchQuery).toBe('');
   });
 });

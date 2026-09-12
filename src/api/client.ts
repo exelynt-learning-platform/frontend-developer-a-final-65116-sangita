@@ -1,4 +1,5 @@
 import axios from 'axios';
+import type { RejectedPayload } from '../types';
 
 export const BASE_URL = 'https://669b3f09276e45187d34eb4e.mockapi.io/api/v1';
 
@@ -33,4 +34,11 @@ export function getHttpStatus(error: unknown): number | undefined {
 
 export function isNotFoundError(error: unknown): boolean {
   return getHttpStatus(error) === 404;
+}
+
+export function toRejectedPayload(
+  error: unknown,
+  extras: Pick<RejectedPayload, 'notFound'> = {}
+): RejectedPayload {
+  return { message: getErrorMessage(error), ...extras };
 }

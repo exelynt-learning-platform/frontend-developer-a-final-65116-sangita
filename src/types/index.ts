@@ -20,3 +20,10 @@ export interface AsyncState {
   loading: boolean;
   error: string | null;
 }
+
+export type SearchStatus = 'idle' | 'loading' | 'found' | 'not_found' | 'error';
+
+export interface RejectedPayload {
+  message: string;
+  notFound?: boolean;
+}
