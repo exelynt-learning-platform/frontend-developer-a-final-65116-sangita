@@ -99,4 +99,103 @@ describe('resolveListState', () => {
       description: 'No employee found with ID "9999".',
     });
   });
+
+  it('falls back to a generic not-found description when searchError is missing', () => {
+    const view = resolveListState({
+      loading: false,
+      countriesLoading: false,
+      error: null,
+      countriesError: null,
+      searchStatus: 'not_found',
+      searchError: null,
+      displayedEmployees: [],
+      ...retry,
+    });
+
+    expect(view).toEqual({
+      type: 'empty',
+      description: 'No employee found with that ID.',
+    });
+  });
+
+  it('returns a retryable error when countries fail to load', () => {
+    const view = resolveListState({
+      loading: false,
+      countriesLoading: false,
+      error: null,
+      countriesError: 'Countries unavailable',
+      searchStatus: 'idle',
+      searchError: null,
+      displayedEmployees: [employee],
+      ...retry,
+    });
+
+    expect(view).toMatchObject({ type: 'error', message: 'Countries unavailable' });
+  });
+
+  it('returns loading while a search is in flight', () => {
+    expect(
+      resolveListState({
+        loading: false,
+        countriesLoading: false,
+        error: null,
+        countriesError: null,
+        searchStatus: 'loading',
+        searchError: null,
+        displayedEmployees: [],
+        ...retry,
+      })
+    ).toEqual({ type: 'loading', tip: 'Searching...' });
+  });
+
+  it('returns a search error with a fallback message', () => {
+    const view = resolveListState({
+      loading: false,
+      countriesLoading: false,
+      error: null,
+      countriesError: null,
+      searchStatus: 'error',
+      searchError: null,
+      displayedEmployees: [],
+      ...retry,
+    });
+
+    expect(view).toMatchObject({
+      type: 'error',
+      message: 'Something went wrong while searching.',
+    });
+  });
+
+  it('returns the generic not-found empty state for a found search without a result', () => {
+    const view = resolveListState({
+      loading: false,
+      countriesLoading: false,
+      error: null,
+      countriesError: null,
+      searchStatus: 'found',
+      searchError: null,
+      displayedEmployees: [],
+      ...retry,
+    });
+
+    expect(view).toEqual({
+      type: 'empty',
+      description: 'No employee found with that ID.',
+    });
+  });
+
+  it('returns loading while countries are fetching', () => {
+    expect(
+      resolveListState({
+        loading: false,
+        countriesLoading: true,
+        error: null,
+        countriesError: null,
+        searchStatus: 'idle',
+        searchError: null,
+        displayedEmployees: [employee],
+        ...retry,
+      }).type
+    ).toBe('loading');
+  });
 });

@@ -6,6 +6,7 @@ import { fetchEmployees, searchEmployeeById, clearSearch } from './employeesSlic
 import { useEmployeeMutations } from './useEmployeeMutations';
 import { computeDisplayedEmployees } from './displayedEmployees';
 import { resolveListState } from './listViewState';
+import { ensureDeleteTarget } from './deleteGuard';
 import EmployeeForm from '../../components/EmployeeForm';
 import ConfirmDeleteModal from '../../components/ConfirmDeleteModal';
 import EmployeeListContent from '../../components/EmployeeListContent';
@@ -56,20 +57,19 @@ export default function EmployeeListPage() {
     setDeleteTarget(employee);
   }, []);
 
+  const closeForm = () => setFormOpen(false);
+
   const handleFormSubmit = async (values: EmployeeFormValues) => {
     const succeeded = editingEmployee
       ? await saveEmployee(editingEmployee.id, values)
       : await addEmployee(values);
     if (succeeded) {
-      setFormOpen(false);
+      closeForm();
     }
   };
 
   const handleDeleteConfirm = async () => {
-    if (!deleteTarget) {
-      console.warn('Delete confirmed with no employee selected.');
-      return;
-    }
+    if (!ensureDeleteTarget(deleteTarget)) return;
     await removeEmployee(deleteTarget.id);
     setDeleteTarget(null);
   };
@@ -106,7 +106,7 @@ export default function EmployeeListPage() {
       <Modal
         title={editingEmployee ? 'Edit Employee' : 'Add Employee'}
         open={formOpen}
-        onCancel={() => setFormOpen(false)}
+        onCancel={closeForm}
         footer={null}
         destroyOnHidden
       >
@@ -115,7 +115,7 @@ export default function EmployeeListPage() {
           countries={countries}
           submitting={mutationLoading}
           onSubmit={handleFormSubmit}
-          onCancel={() => setFormOpen(false)}
+          onCancel={closeForm}
         />
       </Modal>
 

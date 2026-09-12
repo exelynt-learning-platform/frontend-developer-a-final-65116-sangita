@@ -53,5 +53,23 @@ describe('EmployeeTable', () => {
     );
     expect(screen.getByText('Some Country')).toBeInTheDocument();
   });
+
+  it('sorts by name when the Name column header is clicked', async () => {
+    const user = userEvent.setup();
+    render(
+      <EmployeeTable
+        employees={[
+          employees[0],
+          { ...employees[0], id: '2', name: 'Amit Kumar', email: 'amit@example.com' },
+        ]}
+        onEdit={vi.fn()}
+        onDeleteRequest={vi.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole('columnheader', { name: /name/i }));
+    expect(screen.getByText('Amit Kumar')).toBeInTheDocument();
+    expect(screen.getByText('Sangita Zare')).toBeInTheDocument();
+  });
 });
 

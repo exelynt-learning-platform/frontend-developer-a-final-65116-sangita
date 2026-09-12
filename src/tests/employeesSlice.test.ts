@@ -8,6 +8,7 @@ import employeesReducer, {
   deleteEmployee,
   searchEmployeeById,
   clearSearch,
+  clearMutationError,
 } from '../features/employees/employeesSlice';
 import { employeesAPI } from '../features/employees/employeesAPI';
 import type { Employee } from '../types';
@@ -183,5 +184,66 @@ describe('employeesSlice', () => {
     expect(state.searchStatus).toBe('idle');
     expect(state.searchResult).toBeNull();
     expect(state.searchQuery).toBe('');
+  });
+
+  it('sets mutationError when create, update, or delete fail', async () => {
+    vi.mocked(employeesAPI.create).mockRejectedValueOnce(new Error('create failed'));
+    vi.mocked(employeesAPI.update).mockRejectedValueOnce(new Error('update failed'));
+    vi.mocked(employeesAPI.remove).mockRejectedValueOnce(new Error('delete failed'));
+    const store = setupStore();
+
+    await store.dispatch(
+      createEmployee({
+        name: 'New Hire',
+        email: 'new@example.com',
+        mobile: '9999999999',
+        country: 'IN',
+        state: 'Maharashtra',
+        district: 'Pune',
+      })
+    );
+    expect(store.getState().employees.mutationError).toContain('create failed');
+
+    await store.dispatch(updateEmployee({ id: '1', payload: mockEmployee }));
+    expect(store.getState().employees.mutationError).toContain('update failed');
+
+    await store.dispatch(deleteEmployee('1'));
+    expect(store.getState().employees.mutationError).toContain('delete failed');
+  });
+
+  it('clearMutationError resets mutationError', async () => {
+    vi.mocked(employeesAPI.create).mockRejectedValueOnce(new Error('create failed'));
+    const store = setupStore();
+    await store.dispatch(
+      createEmployee({
+        name: 'New Hire',
+        email: 'new@example.com',
+        mobile: '9999999999',
+        country: 'IN',
+        state: 'Maharashtra',
+        district: 'Pune',
+      })
+    );
+
+    store.dispatch(clearMutationError());
+    expect(store.getState().employees.mutationError).toBeNull();
+  });
+
+  it('uses fallback messages when mutation/search rejected payloads are missing', () => {
+    const created = employeesReducer(undefined, { type: createEmployee.rejected.type });
+    expect(created.mutationError).toBe('Failed to create employee.');
+
+    const updated = employeesReducer(undefined, { type: updateEmployee.rejected.type });
+    expect(updated.mutationError).toBe('Failed to update employee.');
+
+    const removed = employeesReducer(undefined, { type: deleteEmployee.rejected.type });
+    expect(removed.mutationError).toBe('Failed to delete employee.');
+
+    const fetched = employeesReducer(undefined, { type: fetchEmployees.rejected.type });
+    expect(fetched.error).toBe('Failed to load employees.');
+
+    const searched = employeesReducer(undefined, { type: searchEmployeeById.rejected.type });
+    expect(searched.searchStatus).toBe('error');
+    expect(searched.searchError).toBe('Employee not found.');
   });
 });

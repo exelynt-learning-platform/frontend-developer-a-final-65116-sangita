@@ -3,7 +3,7 @@ import { useAppDispatch } from '../../app/hooks';
 import { createEmployee, deleteEmployee, updateEmployee } from './employeesSlice';
 import type { EmployeeFormValues, RejectedPayload } from '../../types';
 
-function mutationErrorMessage(err: unknown, fallback: string): string {
+export function getMutationErrorMessage(err: unknown, fallback: string): string {
   if (err && typeof err === 'object' && 'message' in err) {
     const payload = err as RejectedPayload;
     if (typeof payload.message === 'string' && payload.message.length > 0) {
@@ -22,7 +22,7 @@ export function useEmployeeMutations() {
       message.success('Employee added successfully.');
       return true;
     } catch (err) {
-      message.error(mutationErrorMessage(err, 'Failed to create employee.'));
+      message.error(getMutationErrorMessage(err, 'Failed to create employee.'));
       return false;
     }
   };
@@ -33,7 +33,7 @@ export function useEmployeeMutations() {
       message.success('Employee updated successfully.');
       return true;
     } catch (err) {
-      message.error(mutationErrorMessage(err, 'Failed to update employee.'));
+      message.error(getMutationErrorMessage(err, 'Failed to update employee.'));
       return false;
     }
   };
@@ -44,7 +44,7 @@ export function useEmployeeMutations() {
       message.success('Employee deleted successfully.');
       return true;
     } catch (err) {
-      message.error(mutationErrorMessage(err, 'Failed to delete employee.'));
+      message.error(getMutationErrorMessage(err, 'Failed to delete employee.'));
       return false;
     }
   };

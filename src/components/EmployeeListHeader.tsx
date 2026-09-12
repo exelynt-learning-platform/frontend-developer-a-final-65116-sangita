@@ -22,7 +22,7 @@ export default function EmployeeListHeader({
     <>
       <Space className={styles.header}>
         <Title level={3}>Employee Management</Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={onAdd}>
+        <Button type="primary" icon={<PlusOutlined />} onClick={onAdd} aria-label="Add Employee">
           Add Employee
         </Button>
       </Space>

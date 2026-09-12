@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { configureStore } from '@reduxjs/toolkit';
 import { Provider } from 'react-redux';
@@ -161,6 +161,133 @@ describe('EmployeeListPage', () => {
 
     await waitFor(() => expect(employeesAPI.getById).toHaveBeenCalledTimes(2));
     expect(employeesAPI.getById).toHaveBeenLastCalledWith('1');
+  });
+
+  it('opens the add form, submits a new employee, and closes the modal', async () => {
+    const user = userEvent.setup();
+    vi.mocked(employeesAPI.create).mockResolvedValueOnce({
+      id: '9',
+      name: 'John Doe',
+      email: 'john@example.com',
+      mobile: '9876543210',
+      country: 'India',
+      state: 'Maharashtra',
+      district: 'Pune',
+    });
+    renderPage();
+    await screen.findByText('Sangita Zare');
+
+    await user.click(screen.getByRole('button', { name: 'Add Employee' }));
+    const form = await screen.findByTestId('employee-form');
+
+    await user.type(screen.getByPlaceholderText(/Sangita Zare/i), 'John Doe');
+    await user.type(screen.getByPlaceholderText(/name@example.com/i), 'john@example.com');
+    await user.type(screen.getByPlaceholderText(/\+919812345678/i), '9876543210');
+    await user.click(screen.getByRole('combobox', { name: /country/i }));
+    await user.click(await screen.findByTitle('India'));
+    await user.type(screen.getByPlaceholderText(/Maharashtra/i), 'Maharashtra');
+    await user.type(screen.getByPlaceholderText(/Pune/i), 'Pune');
+    await user.click(within(form).getByRole('button', { name: /add employee/i }));
+
+    await waitFor(() => expect(employeesAPI.create).toHaveBeenCalled());
+    expect(await screen.findByText('John Doe')).toBeInTheDocument();
+  });
+
+  it('keeps the add form open when create fails', async () => {
+    const user = userEvent.setup();
+    vi.mocked(employeesAPI.create).mockRejectedValueOnce(new Error('create failed'));
+    renderPage();
+    await screen.findByText('Sangita Zare');
+
+    await user.click(screen.getByRole('button', { name: 'Add Employee' }));
+    const form = await screen.findByTestId('employee-form');
+
+    await user.type(screen.getByPlaceholderText(/Sangita Zare/i), 'John Doe');
+    await user.type(screen.getByPlaceholderText(/name@example.com/i), 'john@example.com');
+    await user.type(screen.getByPlaceholderText(/\+919812345678/i), '9876543210');
+    await user.click(screen.getByRole('combobox', { name: /country/i }));
+    await user.click(await screen.findByTitle('India'));
+    await user.type(screen.getByPlaceholderText(/Maharashtra/i), 'Maharashtra');
+    await user.type(screen.getByPlaceholderText(/Pune/i), 'Pune');
+    await user.click(within(form).getByRole('button', { name: /add employee/i }));
+
+    await waitFor(() => expect(employeesAPI.create).toHaveBeenCalled());
+    expect(form).toBeInTheDocument();
+  });
+
+  it('opens the edit form and saves updates', async () => {
+    const user = userEvent.setup();
+    vi.mocked(employeesAPI.update).mockResolvedValueOnce({
+      ...mockEmployees[0],
+      name: 'Sangita Zare',
+    });
+    renderPage();
+    await screen.findByText('Sangita Zare');
+
+    await user.click(screen.getByRole('button', { name: 'Edit Sangita Zare' }));
+    expect(await screen.findByRole('button', { name: /update employee/i })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /update employee/i }));
+    await waitFor(() => expect(employeesAPI.update).toHaveBeenCalled());
+  });
+
+  it('closes the form when Cancel is clicked', async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByText('Sangita Zare');
+
+    await user.click(screen.getByRole('button', { name: 'Add Employee' }));
+    const form = await screen.findByTestId('employee-form');
+
+    await user.click(within(form).getByRole('button', { name: /cancel/i }));
+  });
+
+  it('clears a search and restores the full list', async () => {
+    const user = userEvent.setup();
+    vi.mocked(employeesAPI.getById).mockResolvedValueOnce(mockEmployees[0]);
+    renderPage();
+    await screen.findByText('Sangita Zare');
+
+    await user.type(screen.getByLabelText('Search employee by ID'), '1');
+    await user.click(screen.getByRole('button', { name: /search/i }));
+    await waitFor(() => expect(employeesAPI.getById).toHaveBeenCalled());
+
+    await user.click(screen.getByRole('button', { name: /clear/i }));
+    expect(await screen.findByText('Sangita Zare')).toBeInTheDocument();
+  });
+
+  it('shows a retryable error when countries fail to load', async () => {
+    const user = userEvent.setup();
+    vi.mocked(countriesAPI.getAll).mockRejectedValueOnce(new Error('Countries down'));
+    renderPage();
+
+    expect(await screen.findByText(/Countries down/)).toBeInTheDocument();
+    vi.mocked(countriesAPI.getAll).mockResolvedValueOnce(mockCountries);
+    await user.click(screen.getByRole('button', { name: 'Retry' }));
+    await waitFor(() => expect(countriesAPI.getAll).toHaveBeenCalledTimes(2));
+  });
+
+  it('closes the delete confirmation without deleting when Cancel is clicked', async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await screen.findByText('Sangita Zare');
+
+    await user.click(screen.getByRole('button', { name: 'Delete Sangita Zare' }));
+    expect(await screen.findByText('Delete employee')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(employeesAPI.remove).not.toHaveBeenCalled();
+  });
+
+  it('retries the employee list after a fetch failure', async () => {
+    const user = userEvent.setup();
+    vi.mocked(employeesAPI.getAll).mockRejectedValueOnce(new Error('Network down'));
+    renderPage();
+
+    expect(await screen.findByText(/Network down/)).toBeInTheDocument();
+    vi.mocked(employeesAPI.getAll).mockResolvedValueOnce(mockEmployees);
+    await user.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(await screen.findByText('Sangita Zare')).toBeInTheDocument();
   });
 });
 

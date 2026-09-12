@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom/vitest';
+import { afterEach } from 'vitest';
 
 // Ant Design needs these in jsdom
 if (!window.matchMedia) {
@@ -35,3 +36,7 @@ window.getComputedStyle = (element, pseudoElement) => {
   }
   return originalGetComputedStyle(element);
 };
+
+afterEach(() => {
+  document.querySelectorAll('.ant-message, .ant-modal-root, .ant-notification').forEach((node) => node.remove());
+});

@@ -72,4 +72,10 @@ describe('countriesSlice', () => {
     expect(state.error).toBeNull();
     expect(state.list).toEqual(mockCountries);
   });
+
+  it('uses a fallback error message when the rejected payload is missing', () => {
+    const state = countriesReducer(undefined, { type: fetchCountries.rejected.type });
+    expect(state.loading).toBe(false);
+    expect(state.error).toBe('Failed to load countries.');
+  });
 });
